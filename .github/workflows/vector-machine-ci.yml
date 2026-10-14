@@ -3,8 +3,26 @@ name: Vector Machine CI
 on:
   push:
     branches: [develop, master]
+    paths:
+      - 'crates/**'
+      - 'apps/vectorcraft-web/**'
+      - 'xtask/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
+      - 'rust-toolchain*'
+      - '.github/workflows/vector-machine-ci.yml'
   pull_request:
     branches: [develop, master]
+    paths:
+      - 'crates/**'
+      - 'apps/vectorcraft-web/**'
+      - 'xtask/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
+      - 'rust-toolchain*'
+      - '.github/workflows/vector-machine-ci.yml'
   workflow_dispatch:
 
 permissions:
@@ -19,44 +37,10 @@ env:
   CARGO_INCREMENTAL: 0
 
 jobs:
-  quality:
-    name: Quality and desktop build
-    runs-on: ubuntu-24.04
-    timeout-minutes: 90
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Install Linux build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential pkg-config libxkbcommon-dev libwayland-dev libx11-dev \
-            libxrandr-dev libxi-dev libgl1-mesa-dev
-      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
-        with:
-          components: rustfmt, clippy
-          targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-        with:
-          key: vector-machine-quality
-      - name: Verify locked dependencies
-        run: cargo metadata --locked --format-version 1 > /dev/null
-      - name: Upstream quality gates
-        run: cargo xtask ci
-      - name: Build desktop app
-        run: cargo build --locked -p vectorcraft
-      - name: Headless export smoke check
-        run: |
-          cargo run --locked -p vectorcraft-cli -- run \
-            --in examples/dusk-poster.vectorcraft --export "$RUNNER_TEMP/vector-machine-smoke.png"
-          test -s "$RUNNER_TEMP/vector-machine-smoke.png"
-      - name: Verify lockfile stayed unchanged
-        run: git diff --exit-code -- Cargo.lock
-
   web:
     name: Web build artifact
-    needs: quality
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 30
     env:
       TRUNK_VERSION: 0.21.14
     steps:

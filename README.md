@@ -53,8 +53,10 @@ cargo run --locked --release -p vectorcraft-cli -- mcp
 
 [Vector Machine CI](.github/workflows/vector-machine-ci.yml) roda em PRs para `develop`/`master`, pushes nessas branches e execução manual:
 
-1. Qualidade, build desktop Linux e exportação de um exemplo para PNG.
-2. Após a qualidade passar, build web e upload de `vector-machine-web` como artefato, retido por sete dias.
+1. Um único job compila a versão web com dependências travadas e cache de Rust.
+2. Verifica que o HTML e o WASM foram gerados, que o lockfile não mudou e envia `vector-machine-web` como artefato, retido por sete dias.
+
+A CI cotidiana não executa `cargo xtask ci`, Clippy, a suíte inteira de testes ou builds desktop. Esses comandos continuam disponíveis para validação local e mudanças que precisem deles. Alterações apenas em documentação não disparam o build; execução manual permanece disponível. Novas execuções cancelam a anterior da mesma branch/PR. O job tem limite de 30 minutos, não uma estimativa de duração; a primeira compilação sem cache pode levar mais tempo.
 
 O artefato pode ser baixado em **Actions → execução → Artifacts** e servido por um servidor estático. Não há deploy, publicação de releases ou merge automático. A primeira execução precisa ser aprovada no GitHub se os Actions estiverem desativados no fork. Nenhum secret é necessário nesta etapa.
 
